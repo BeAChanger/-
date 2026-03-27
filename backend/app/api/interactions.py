@@ -13,6 +13,7 @@ from app.schemas.schemas import (
     LikeRequest,
     SuccessResponse,
 )
+from app.utils import safe_json
 
 router = APIRouter(prefix="/api/interactions", tags=["interactions"])
 
@@ -158,18 +159,6 @@ def connect(req: ConnectRequest, db: Session = Depends(get_db)):
     return _err("INVALID_ACTION", "action 必须是 follow 或 unfollow")
 
 
-def _safe_json(val, default):
-    import json as _json
-    if val is None:
-        return default
-    if isinstance(val, str):
-        try:
-            return _json.loads(val)
-        except (ValueError, TypeError):
-            return default
-    return val
-
-
 def _agent_brief(agent: Agent) -> dict:
     return AgentBriefData(
         agentId=agent.agent_id,
@@ -177,7 +166,7 @@ def _agent_brief(agent: Agent) -> dict:
         avatar=agent.avatar or "",
         jobTitle=agent.job_title or "",
         bio=agent.bio or "",
-        skills=_safe_json(agent.skills, []),
+        skills=safe_json(agent.skills, []),
     ).model_dump()
 
 

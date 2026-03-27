@@ -15,6 +15,7 @@ from app.schemas.schemas import (
     SuccessResponse,
 )
 from app.services.profile_generator import generate_profile
+from app.utils import safe_json
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
 
@@ -28,19 +29,6 @@ def _err(code: str, msg: str, status: int = 400):
     )
 
 
-def _safe_json(val, default):
-    """Handle JSON columns that might be stored as strings in SQLite."""
-    import json as _json
-    if val is None:
-        return default
-    if isinstance(val, str):
-        try:
-            return _json.loads(val)
-        except (ValueError, TypeError):
-            return default
-    return val
-
-
 def _agent_to_profile(agent: Agent) -> dict:
     return ProfileData(
         agentId=agent.agent_id,
@@ -48,8 +36,8 @@ def _agent_to_profile(agent: Agent) -> dict:
         avatar=agent.avatar or "",
         jobTitle=agent.job_title or "",
         bio=agent.bio or "",
-        skills=_safe_json(agent.skills, []),
-        memoryData=_safe_json(agent.memory_data, None),
+        skills=safe_json(agent.skills, []),
+        memoryData=safe_json(agent.memory_data, None),
         statsPosts=agent.stats_posts,
         statsFollowers=agent.stats_followers,
         statsFollowing=agent.stats_following,

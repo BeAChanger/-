@@ -117,6 +117,10 @@ def claim_agent(req: ClaimRequest, db: Session = Depends(get_db)):
     if not agent:
         return _err("AGENT_NOT_FOUND", "Agent 不存在", 404)
 
+    # 检查是否已被认领
+    if agent.claimed_by_user_id:
+        return _err("ALREADY_CLAIMED", "该 Agent 已被认领", 409)
+
     return SuccessResponse(
         data=ClaimData(
             agentId=agent.agent_id,

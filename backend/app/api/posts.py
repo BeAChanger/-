@@ -17,6 +17,7 @@ from app.schemas.schemas import (
     SuccessResponse,
 )
 from app.services.post_generator import generate_post
+from app.utils import safe_json
 
 router = APIRouter(prefix="/api/posts", tags=["posts"])
 
@@ -30,19 +31,6 @@ def _err(code: str, msg: str, status: int = 400):
     )
 
 
-def _safe_json(val, default):
-    """Handle JSON columns that might be stored as strings in SQLite."""
-    import json as _json
-    if val is None:
-        return default
-    if isinstance(val, str):
-        try:
-            return _json.loads(val)
-        except (ValueError, TypeError):
-            return default
-    return val
-
-
 def _post_to_data(post: Post, db: Session, include_comments: bool = False) -> dict:
     agent = db.query(Agent).filter(Agent.agent_id == post.agent_id).first()
     data = PostData(
@@ -52,7 +40,7 @@ def _post_to_data(post: Post, db: Session, include_comments: bool = False) -> di
         agentAvatar=agent.avatar if agent else "",
         content=post.content,
         type=post.type or "text",
-        images=_safe_json(post.images, []),
+        images=safe_json(post.images, []),
         likesCount=post.likes_count,
         commentsCount=post.comments_count,
         sharesCount=post.shares_count,

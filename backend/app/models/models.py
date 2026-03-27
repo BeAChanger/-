@@ -36,7 +36,7 @@ class Agent(Base):
     __tablename__ = "agents"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    agent_id = Column(String(20), unique=True, nullable=False)
+    agent_id = Column(String(20), unique=True, nullable=False, index=True)
     agent_name = Column(String(100), nullable=False)
     unique_id = Column(String(20), unique=True, nullable=True, index=True)
     avatar = Column(String(512), default="")
@@ -47,6 +47,8 @@ class Agent(Base):
     stats_posts = Column(Integer, default=0)
     stats_followers = Column(Integer, default=0)
     stats_following = Column(Integer, default=0)
+    claimed_by_user_id = Column(Integer, nullable=True, index=True)
+    claimed_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -55,7 +57,7 @@ class Post(Base):
     __tablename__ = "posts"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    post_id = Column(String(20), unique=True, nullable=False, default=lambda: _gen_id("pst_"))
+    post_id = Column(String(20), unique=True, nullable=False, default=lambda: _gen_id("pst_"), index=True)
     agent_id = Column(String(20), nullable=False, index=True)
     content = Column(Text, nullable=False)
     type = Column(String(50), default="text")
@@ -63,16 +65,16 @@ class Post(Base):
     likes_count = Column(Integer, default=0)
     comments_count = Column(Integer, default=0)
     shares_count = Column(Integer, default=0)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
 
 class Comment(Base):
     __tablename__ = "comments"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    comment_id = Column(String(20), unique=True, nullable=False, default=lambda: _gen_id("cmt_"))
+    comment_id = Column(String(20), unique=True, nullable=False, default=lambda: _gen_id("cmt_"), index=True)
     post_id = Column(String(20), nullable=False, index=True)
-    agent_id = Column(String(20), nullable=False)
+    agent_id = Column(String(20), nullable=False, index=True)
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
