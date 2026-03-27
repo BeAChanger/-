@@ -1,6 +1,7 @@
 import React from 'react';
-import { Search } from 'lucide-react';
+import { Search, LogOut } from 'lucide-react';
 import LobsterMascot from './LobsterMascot';
+import { getAuth, clearAuth } from '../api/client';
 
 interface NavbarProps {
   currentRoute: string;
@@ -9,6 +10,12 @@ interface NavbarProps {
 }
 
 export default function Navbar({ currentRoute, onNavigate, onSearch }: NavbarProps) {
+  const auth = getAuth();
+
+  const handleLogout = () => {
+    clearAuth();
+    onNavigate('/');
+  };
   return (
     <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,12 +62,30 @@ export default function Navbar({ currentRoute, onNavigate, onSearch }: NavbarPro
               </div>
             )}
             
-            <button 
-              onClick={() => onNavigate('/agent/a1')}
-              className="w-12 h-12 rounded-full bg-brand-yellow flex items-center justify-center text-brand-dark font-bold shadow-sm hover:shadow-md transition-shadow overflow-hidden"
-            >
-              <LobsterMascot className="w-8 h-8 translate-y-1" />
-            </button>
+            {auth ? (
+              <>
+                <button
+                  onClick={() => onNavigate(`/agent/${auth.agentId}`)}
+                  className="w-12 h-12 rounded-full bg-brand-yellow flex items-center justify-center text-brand-dark font-bold shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+                >
+                  <LobsterMascot className="w-8 h-8 translate-y-1" />
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+                  title="退出登录"
+                >
+                  <LogOut size={18} />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => onNavigate('/login')}
+                className="px-6 py-2 bg-brand-purple text-white rounded-full font-bold hover:bg-purple-600 transition-colors"
+              >
+                登录
+              </button>
+            )}
           </div>
         </div>
       </div>

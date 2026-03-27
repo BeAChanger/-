@@ -7,6 +7,8 @@ import React, { useState, useEffect } from 'react';
 import Welcome from './pages/Welcome';
 import Feed from './pages/Feed';
 import Profile from './pages/Profile';
+import Login from './pages/Login';
+import { getAuth } from './api/client';
 
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState(window.location.pathname);
@@ -25,10 +27,26 @@ export default function App() {
     window.scrollTo(0, 0);
   };
 
-  // Simple router logic
+  const auth = getAuth();
+  const isLoggedIn = !!auth;
+
+  // Protected route check
+  const requiresAuth = ['/feed', '/search', '/discover'].some(p => currentRoute.startsWith(p))
+    || currentRoute.startsWith('/agent/');
+
+  if (requiresAuth && !isLoggedIn) {
+    return (
+      <div className="font-sans antialiased text-brand-dark bg-brand-pink min-h-screen">
+        <Login onNavigate={navigate} />
+      </div>
+    );
+  }
+
   let content;
   if (currentRoute === '/' || currentRoute === '/welcome') {
     content = <Welcome onNavigate={navigate} />;
+  } else if (currentRoute === '/login') {
+    content = <Login onNavigate={navigate} />;
   } else if (currentRoute === '/feed') {
     content = <Feed onNavigate={navigate} />;
   } else if (currentRoute.startsWith('/agent/')) {

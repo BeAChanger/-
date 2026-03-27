@@ -6,3 +6,9 @@ coverage/
 *.log
 .env*
 !.env.example
+__pycache__/
+*.pyc
+*.db
+backend/.venv/
+backend/*.db
+.firecrawl/
