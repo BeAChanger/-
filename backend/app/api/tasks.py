@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, aliased
 
 from app.database import get_db
 from app.models.models import Agent, Task
-from app.schemas.schemas import SuccessResponse, TaskCreate, TaskData, TaskUpdate
+from app.schemas.schemas import SuccessResponse, TaskCreate, TaskData, TaskDeliverableRequest, TaskMessageRequest, TaskUpdate
 
 router = APIRouter(prefix="/api/tasks", tags=["tasks"])
 
@@ -145,4 +145,96 @@ def update_task(task_id: str, req: TaskUpdate, db: Session = Depends(get_db)):
     return SuccessResponse(
         data=_task_to_data(refreshed_task, from_name, to_name),
         message="协作任务更新成功",
+    )
+
+
+@router.post("/{task_id}/accept")
+def accept_task(task_id: str, db: Session = Depends(get_db)):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        return _err("TASK_NOT_FOUND", "协作任务不存在", 404)
+
+    if task.status != "pending":
+        return _err("INVALID_STATUS", f"任务状态为 {task.status}，无法接受")
+
+    task.status = "accepted"
+    db.commit()
+
+    row = _task_query(db).filter(Task.id == task_id).first()
+    assert row is not None
+    refreshed_task, from_name, to_name = row
+    return SuccessResponse(
+        data=_task_to_data(refreshed_task, from_name, to_name),
+        message="已接受协作任务",
+    )
+
+
+@router.post("/{task_id}/reject")
+def reject_task(task_id: str, db: Session = Depends(get_db)):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        return _err("TASK_NOT_FOUND", "协作任务不存在", 404)
+
+    if task.status != "pending":
+        return _err("INVALID_STATUS", f"任务状态为 {task.status}，无法拒绝")
+
+    task.status = "rejected"
+    db.commit()
+
+    row = _task_query(db).filter(Task.id == task_id).first()
+    assert row is not None
+    refreshed_task, from_name, to_name = row
+    return SuccessResponse(
+        data=_task_to_data(refreshed_task, from_name, to_name),
+        message="已拒绝协作任务",
+    )
+
+
+@router.post("/{task_id}/message")
+def add_message(task_id: str, req: TaskMessageRequest, db: Session = Depends(get_db)):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        return _err("TASK_NOT_FOUND", "协作任务不存在", 404)
+
+    if req.agentId not in [task.from_agent_id, task.to_agent_id]:
+        return _err("UNAUTHORIZED", "只有任务参与者可以发送消息", 403)
+
+    conversation = _decode_json(task.conversation, [])
+    conversation.append({
+        "agentId": req.agentId,
+        "content": req.content,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+    task.conversation = _encode_json(conversation)
+    db.commit()
+
+    row = _task_query(db).filter(Task.id == task_id).first()
+    assert row is not None
+    refreshed_task, from_name, to_name = row
+    return SuccessResponse(
+        data=_task_to_data(refreshed_task, from_name, to_name),
+        message="消息已发送",
+    )
+
+
+@router.post("/{task_id}/deliverable")
+def submit_deliverable(task_id: str, req: TaskDeliverableRequest, db: Session = Depends(get_db)):
+    task = db.query(Task).filter(Task.id == task_id).first()
+    if not task:
+        return _err("TASK_NOT_FOUND", "协作任务不存在", 404)
+
+    if req.agentId != task.to_agent_id:
+        return _err("UNAUTHORIZED", "只有接收方可以提交交付物", 403)
+
+    task.deliverable = _encode_json(req.deliverable)
+    task.status = "completed"
+    task.completed_at = datetime.now(timezone.utc)
+    db.commit()
+
+    row = _task_query(db).filter(Task.id == task_id).first()
+    assert row is not None
+    refreshed_task, from_name, to_name = row
+    return SuccessResponse(
+        data=_task_to_data(refreshed_task, from_name, to_name),
+        message="交付物已提交，任务已完成",
     )

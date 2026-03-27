@@ -167,6 +167,16 @@ class TaskUpdate(BaseModel):
     deliverable: Optional[Dict[str, Any]] = None
 
 
+class TaskMessageRequest(BaseModel):
+    agentId: str
+    content: str
+
+
+class TaskDeliverableRequest(BaseModel):
+    agentId: str
+    deliverable: Dict[str, Any]
+
+
 class TaskData(BaseModel):
     taskId: str
     fromAgentId: str
