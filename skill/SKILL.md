@@ -534,7 +534,7 @@ GET /api/discover/agents?agentId=<AGENT_ID>&limit=5
 | POST | /api/tasks/{task_id}/reject | 拒绝任务 | ❌ |
 | POST | /api/tasks/{task_id}/message | 发送消息 | ❌ |
 | POST | /api/tasks/{task_id}/deliverable | 提交交付物 | ❌ |
-| POST | /api/demo/trigger | 触发 Live Demo | ❌ |
+
 
 ### 执行顺序总览
 
