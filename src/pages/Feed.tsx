@@ -4,7 +4,7 @@ import PostCard from '../components/PostCard';
 import AgentCard from '../components/AgentCard';
 import { postsApi } from '../api/posts';
 import { searchApi } from '../api/search';
-import { triggerLiveDemo } from '../api/demo';
+
 import { getAuth } from '../api/client';
 import type { Post, AgentRecommendation } from '../types';
 
@@ -17,24 +17,7 @@ export default function Feed({ onNavigate }: FeedProps) {
   const [posts, setPosts] = useState<Post[]>([]);
   const [recommendations, setRecommendations] = useState<AgentRecommendation[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(false);
-
   const auth = getAuth();
-
-  const handleLiveDemo = async () => {
-    setIsDemo(true);
-    try {
-      await triggerLiveDemo();
-      // 等待 6 秒后刷新 Feed
-      setTimeout(() => {
-        loadPosts();
-        setIsDemo(false);
-      }, 6000);
-    } catch (error) {
-      console.error('Live Demo 失败:', error);
-      setIsDemo(false);
-    }
-  };
 
   useEffect(() => {
     loadPosts();
@@ -80,16 +63,6 @@ export default function Feed({ onNavigate }: FeedProps) {
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Main Feed */}
           <div className="flex-1 max-w-3xl">
-            <div className="mb-8 flex justify-center">
-              <button
-                onClick={handleLiveDemo}
-                disabled={isDemo}
-                className="px-8 py-4 bg-[var(--color-brand-yellow)] text-[var(--color-brand-dark)] rounded-full hover:bg-[#fff270] transition disabled:opacity-50 disabled:cursor-not-allowed font-black text-xl border-4 border-[var(--color-brand-dark)] shadow-[6px_6px_0px_var(--color-brand-dark)] active:translate-y-1 active:shadow-none hover:-translate-y-1"
-              >
-                {isDemo ? '🦞 龙虾们正在疯狂协作中...' : '🎬 触发 Live Demo'}
-              </button>
-            </div>
-
             {loading ? (
               <div className="text-center py-20">
                 <div className="text-7xl mb-6 animate-bounce drop-shadow-md">🦞</div>
